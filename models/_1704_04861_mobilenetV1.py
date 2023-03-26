@@ -4,19 +4,19 @@ import math
 import torch
 import torch.nn as nn
 
-from .point_and_depth_wise_conv import ConvBlock, DepthwiseSeparableConv2d
+from .point_depth_separable_conv import ConvBlock, SeparableConv2d
 
 mobilenetV1_architecture = [
-    # (out_channels, stride, padding)
-    (64, 1, 1),
-    (128, 2, 1),
-    (128, 1, 1),
-    (256, 2, 1),
-    (256, 1, 1),
-    (512, 2, 1),
-    [(512, 1, 1), 5],
-    (1024, 2, 1),
-    (1024, 2, 4)
+    # (out_channels, kernel size, stride, padding)
+    (64, 3, 1, 1),
+    (128, 3, 2, 1),
+    (128, 3, 1, 1),
+    (256, 3, 2, 1),
+    (256, 3, 1, 1),
+    (512, 3, 2, 1),
+    [(512, 3, 1, 1), 5],
+    (1024, 3, 2, 1),
+    (1024, 3, 2, 4)
 ]
 
 class MobileNetV1(nn.Module):
@@ -35,19 +35,19 @@ class MobileNetV1(nn.Module):
         
         for x in architecture:
             if isinstance(x, tuple):
-                out_channels, stride, padding = x
+                out_channels, kernel_size, stride, padding = x
                 out_channels = math.ceil(a * out_channels)
                 layers += [
-                    DepthwiseSeparableConv2d(in_channels, out_channels, stride=stride, padding=padding)
+                    SeparableConv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
                     ]
             
             elif isinstance(x, list):
-                out_channels, stride, padding = x[0]
+                out_channels, kernel_size, stride, padding = x[0]
                 out_channels = math.ceil(a * out_channels)
                 num_repeat = x[1]
                 
                 layers += [
-                    DepthwiseSeparableConv2d(in_channels, out_channels, stride=stride, padding=padding)
+                    SeparableConv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
                     for _ in range(num_repeat)]
             
             in_channels = out_channels
