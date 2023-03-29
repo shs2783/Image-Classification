@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 
 class ConvBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, act=True, **kwargs):
+    def __init__(self, in_channels, out_channels, kernel_size, norm=True, act=True, **kwargs):
         super().__init__()
 
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, **kwargs)
-        self.norm = nn.BatchNorm2d(out_channels)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, bias=not norm, **kwargs)
+        self.norm = nn.BatchNorm2d(out_channels) if norm else nn.Identity()
         self.act = nn.ReLU() if act else nn.Identity()
 
     def forward(self, x):

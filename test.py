@@ -1,9 +1,10 @@
 import torch
 from utils import show_params
-from models import XceptionNet
+from models import ResNeXt, ResNet
 
 if __name__=='__main__':
-    model = XceptionNet()
+    model = ResNeXt('resnext50')
+    # model = ResNet('resnet50')
     show_params(model)
 
     x = torch.randn(1, 3, 224, 224)

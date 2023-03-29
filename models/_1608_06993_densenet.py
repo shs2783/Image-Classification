@@ -11,12 +11,12 @@ densnet_config = {
 }
 
 class ConvBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, **kwargs) -> None:
+    def __init__(self, in_channels, out_channels, kernel_size, norm=True, act=True, **kwargs) -> None:
         super().__init__()
 
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, **kwargs)
-        self.norm = nn.BatchNorm2d(out_channels)
-        self.act = nn.ReLU(inplace=True)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, bias=not norm, **kwargs)
+        self.norm = nn.BatchNorm2d(out_channels) if norm else nn.Identity()
+        self.act = nn.ReLU(inplace=True) if act else nn.Identity()
 
     def forward(self, x):
         return self.norm(self.act(self.conv(x)))
