@@ -1,15 +1,15 @@
-'https://arxiv.org/pdf/1512.03385.pdf'
+'https://arxiv.org/pdf/1611.05431.pdf'
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-resnet_config = {
-    'resnet18': [[2, 2, 2, 2], False],
-    'resnet34': [[3, 4, 6, 3], False],
-    'resnet50': [[3, 4, 6, 3], True],
-    'resnet101': [[3, 4, 23, 3], True],
-    'resnet152': [[3, 8, 36, 3], True]
+resnext_config = {
+    'resnext18': [[2, 2, 2, 2], False],
+    'resnext34': [[3, 4, 6, 3], False],
+    'resnext50': [[3, 4, 6, 3], True],
+    'resnext101': [[3, 4, 23, 3], True],
+    'resnext152': [[3, 8, 36, 3], True]
 }
 
 class ConvBlock(nn.Module):
@@ -25,21 +25,22 @@ class ConvBlock(nn.Module):
     
 
 class ResidualBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, stride=1, bottleneck=True, down_sample=None) -> None:
+    def __init__(self, in_channels, out_channels, stride=1, groups=32, bottleneck_width=4, bottleneck=True, down_sample=None) -> None:
         super().__init__()
         self.down_sample = down_sample
+        width = bottleneck_width * groups
 
         if bottleneck:
             self.res_layers = nn.Sequential(
-                ConvBlock(in_channels, out_channels//4, kernel_size=1, stride=1, padding=0, act=True),
-                ConvBlock(out_channels//4, out_channels//4, kernel_size=3, stride=stride, padding=1, act=True),
-                ConvBlock(out_channels//4, out_channels, kernel_size=1, stride=1, padding=0, act=False),
+                ConvBlock(in_channels, width, kernel_size=1, stride=1, padding=0, act=True),
+                ConvBlock(width, width, kernel_size=3, stride=stride, padding=1, groups=groups, act=True),
+                ConvBlock(width, out_channels, kernel_size=1, stride=1, padding=0, act=False),
             )
 
         else:
             self.res_layers = nn.Sequential(
-                ConvBlock(in_channels, out_channels, kernel_size=3, stride=1, padding=1, act=True),
-                ConvBlock(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, act=False)
+                ConvBlock(in_channels, width, kernel_size=3, stride=1, padding=1, groups=groups, act=True),
+                ConvBlock(width, out_channels, kernel_size=3, stride=stride, padding=1, groups=groups, act=False)
             )
             
     def forward(self, x):
@@ -48,17 +49,19 @@ class ResidualBlock(nn.Module):
         return F.relu(x + identity, inplace=True)
     
 
-class ResNet(nn.Module):
-    def __init__(self, config='resnet101', in_channels=3, num_classes=1000) -> None:
-        ''' config: resnet18, resnet34, resnet50, resnet101, resnet152 '''
+class ResNeXt(nn.Module):
+    def __init__(self, config='resnext50', groups=32, bottleneck_width=4, in_channels=3, num_classes=1000) -> None:
+        ''' config: resnext18, resnext34, resnext50, resnext101, resnext152 '''
         
         super().__init__()
-
-        model_config = resnet_config[config]
+        model_config = resnext_config[config]
         num_repeats = model_config[0]
         bottleneck = model_config[1]
 
+        self.groups = groups
+        self.bottleneck_width = bottleneck_width
         self.res_channels = 64
+
         self.conv_layer = ConvBlock(in_channels, out_channels=self.res_channels, kernel_size=7, stride=2, padding=3)
         self.max_pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
@@ -76,6 +79,8 @@ class ResNet(nn.Module):
     def _make_residual_layers(self, num_repeat, bottleneck, down_sample):
         layers = []
         out_channels = self.res_channels*4 if bottleneck else self.res_channels
+        groups = self.groups
+        bottleneck_width = self.bottleneck_width
             
         if down_sample:
             stride = 2
@@ -86,11 +91,12 @@ class ResNet(nn.Module):
             in_channels = self.res_channels
             down_sample = ConvBlock(in_channels, out_channels, kernel_size=1, stride=stride)
         
-        layers += [ResidualBlock(in_channels, out_channels, stride, bottleneck, down_sample)]
+        layers += [ResidualBlock(in_channels, out_channels, stride, groups, bottleneck_width, bottleneck, down_sample)]
         for _ in range(num_repeat-1):
-            layers += [ResidualBlock(out_channels, out_channels, stride=1, bottleneck=bottleneck, down_sample=None)]
+            layers += [ResidualBlock(out_channels, out_channels, 1, groups, bottleneck_width, bottleneck, down_sample=None)]
 
         self.res_channels *= 2
+        self.bottleneck_width *= 2
         return nn.Sequential(*layers)
     
     def forward(self, x):
@@ -108,7 +114,9 @@ class ResNet(nn.Module):
         return x
     
 if __name__=='__main__':
-    model = ResNet('resnet101')
+    groups = 32
+    bottleneck_width = 8
+    model = ResNeXt('resnext101', groups, bottleneck_width)
 
     x = torch.randn(1, 3, 224, 224)
     y = model(x)
