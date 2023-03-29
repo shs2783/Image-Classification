@@ -1,11 +1,9 @@
 import torch
 from utils import show_params
-from models import ResNeXt
+from models import ShuffleNetV1
 
 if __name__=='__main__':
-    groups = 64
-    bottleneck_width = 4
-    model = ResNeXt('resnext101', groups, bottleneck_width)
+    model = ShuffleNetV1(groups=3, scale_factor=1)
     show_params(model)
 
     x = torch.randn(1, 3, 224, 224)

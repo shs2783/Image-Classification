@@ -7,6 +7,7 @@ from ._1608_06993_densenet import DenseNet, densnet_config
 from ._1610_02357_Xceptionnet import XceptionNet
 from ._1611_05431_resneXt import ResNeXt, resnext_config
 from ._1704_04861_mobilenetV1 import MobileNetV1, mobilenetV1_architecture
+from ._1707_01083_shufflenetV1 import ShuffleNetV1
 from ._1801_04381_mobilenetV2 import MobileNetV2
 from ._1905_11946_efficientnet import EfficientNet
 
@@ -20,6 +21,7 @@ __all__ = [
     'XceptionNet', 
     'ResNeXt', resnext_config,
     'MobileNetV1', mobilenetV1_architecture,
+    'ShuffleNetV1',
     'MobileNetV2', 
     'EfficientNet'
     ]
