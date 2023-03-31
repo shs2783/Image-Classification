@@ -3,10 +3,10 @@ sys.path.append('models')
 
 import torch
 from utils import show_params
-from models import ShuffleNetV1
+from models import MobileNetV2
 
 if __name__=='__main__':
-    model = ShuffleNetV1(groups=3, scale_factor=1)
+    model = MobileNetV2()
     show_params(model)
 
     x = torch.randn(1, 3, 224, 224)
