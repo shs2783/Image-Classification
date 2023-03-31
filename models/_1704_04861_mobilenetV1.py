@@ -48,7 +48,8 @@ class MobileNetV1(nn.Module):
                 
                 layers += [
                     SeparableConv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
-                    for _ in range(num_repeat)]
+                    for _ in range(num_repeat)
+                    ]
             
             in_channels = out_channels
             
@@ -64,9 +65,9 @@ class MobileNetV1(nn.Module):
         return x
         
 if __name__ == '__main__':
-    a = 1  # 1, 0.75, 0.5, 0.25
-    p = 1  # 1(=224), 0.857(=192), 0.714(=160). 0.571(=128)
-    
+    a = 1  # [1, 0.75, 0.5, 0.25]
+    p = 1  # [1(=224), 0.857(=192), 0.714(=160). 0.571(=128)]
+
     model = MobileNetV1(mobilenetV1_architecture, a=a)
     
     resolution = math.ceil(224 * p)

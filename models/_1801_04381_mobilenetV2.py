@@ -38,7 +38,6 @@ class InvertedResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, expansion=6) -> None:
         super().__init__()
 
-        self.stride = stride
         self.residual = (in_channels == out_channels)
         hidden_channels = expansion * in_channels
         act = (stride == 1)
