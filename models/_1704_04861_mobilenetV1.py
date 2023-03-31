@@ -4,7 +4,7 @@ import math
 import torch
 import torch.nn as nn
 
-from .point_depth_separable_conv import ConvBlock, SeparableConv2d
+from point_depth_separable_conv import ConvBlock, SeparableConv2d
 
 mobilenetV1_architecture = [
     # (out_channels, kernel size, stride, padding)

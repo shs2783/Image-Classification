@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .point_depth_separable_conv import ConvBlock, PointwiseConv2d, DepthwiseConv2d
+from point_depth_separable_conv import ConvBlock, PointwiseConv2d, DepthwiseConv2d
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, groups=8, stride=1) -> None:

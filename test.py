@@ -1,3 +1,6 @@
+import sys
+sys.path.append('models')
+
 import torch
 from utils import show_params
 from models import ShuffleNetV1

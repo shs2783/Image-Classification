@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .point_depth_separable_conv import ConvBlock, SeparableConv2d
+from point_depth_separable_conv import ConvBlock, SeparableConv2d
 
 class SeparableConvBlock(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels) -> None:
