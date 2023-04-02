@@ -12,9 +12,9 @@ class ScaledDotProductAttention(nn.Module):
         self.scaling_factor = d_k ** 0.5
 
     def forward(self, query, key, value, mask=None):
-        # query, key, value shape: (batch_size, h, seq_len, d_k)
+        # query, key, value shape: (batch_size, num_head, seq_len, d_k)
 
-        key = key.transpose(-2, -1)  # (batch_size, h, d_k, seq_len)
+        key = key.transpose(-2, -1)  # (batch_size, num_head, d_k, seq_len)
         attention_score = torch.matmul(query, key) / self.scaling_factor
 
         if mask is not None:
@@ -54,26 +54,26 @@ class MultiHeadAttention(nn.Module):
         else:
             query = key = value = x
             
-        query = self.query_linear(query)
-        key = self.key_linear(key)
-        value = self.value_linear(value)
+        query = self.query_linear(query)  # (batch, seq_len, dimension)  ## dimension = d_model
+        key = self.key_linear(key)        # (batch, seq_len, dimension)
+        value = self.value_linear(value)  # (batch, seq_len, dimension)
 
-        query = self._split_dimension(query)
-        key = self._split_dimension(key)
-        value = self._split_dimension(value)
+        query = self._split_dimension(query)  # (batch, num_head, seq_len, dimension//num_head)
+        key = self._split_dimension(key)      # (batch, num_head, seq_len, dimension//num_head)
+        value = self._split_dimension(value)  # (batch, num_head, seq_len, dimension//num_head)
 
-        attention, attention_weights = self.attention_layers(query, key, value, mask)  # (batch, split, seq_len, dimension//split)
-        attention = attention.transpose(1, 2).contiguous()  # (batch, seq_len, split, dimension//split)
+        attention, attention_weights = self.attention_layers(query, key, value, mask)  # (batch, num_head, seq_len, dimension//num_head)
+        attention = attention.transpose(1, 2).contiguous()  # (batch, seq_len, num_head, dimension//num_head)
         attention = attention.view(batch, seq_len, dimension)
         output = self.fc_layer(attention)
         return output
 
     def _split_dimension(self, x):
         batch, seq_len, dimension = x.shape
-        split = self.num_head
+        num_head = self.num_head
 
-        x = x.view(batch, seq_len, split, dimension//split)
-        x = x.transpose(1, 2)  # (batch, split, seq_len, dimension//split)
+        x = x.view(batch, seq_len, num_head, dimension//num_head)
+        x = x.transpose(1, 2)  # (batch, num_head, seq_len, dimension//num_head)
         return x
     
 class PositionWiseFeedForward(nn.Module):
