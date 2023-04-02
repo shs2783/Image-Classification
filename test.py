@@ -3,18 +3,12 @@ sys.path.append('models')
 
 import torch
 from utils import show_params
-from models import EfficientNet
+from models import Transformer
 
 if __name__=='__main__':
-    compound_coefficient = 0
-    depth_multiplier = 1.2 ** compound_coefficient
-    width_multiplier = 1.1 ** compound_coefficient
-    resolution_multi = 1.15 ** compound_coefficient
-    
-    model = EfficientNet(depth_multiplier=depth_multiplier, width_multiplier=width_multiplier, reduction_ratio=16)
+    model = Transformer()
     show_params(model)
 
-    resolution = int(resolution_multi * 224)
-    x = torch.randn(1, 3, resolution, resolution)
-    y = model(x)
+    x = torch.randn(1, 64, 512)
+    y = model(x, x)
     print(y.shape)
