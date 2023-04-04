@@ -11,6 +11,7 @@ from ._1707_01083_shufflenetV1 import ShuffleNetV1
 from ._1801_04381_mobilenetV2 import MobileNetV2, mobilenetV2_architecture
 from ._1801_04381_mobilenetV2 import MobileNetV2
 from ._1905_11946_efficientnet import EfficientNet
+from ._2010_11929_vision_transformer import ViT
 from transformer import Transformer
 
 __all__ = [
@@ -27,5 +28,6 @@ __all__ = [
     'MobileNetV2', mobilenetV2_architecture,
     'MobileNetV2', 
     'EfficientNet',
-    'Transformer'
+    'Transformer',
+    'ViT'
     ]
