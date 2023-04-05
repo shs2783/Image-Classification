@@ -172,12 +172,13 @@ class Transformer(nn.Module):
         self.positional_encoding = nn.Linear(1, d_model)
     
     def forward(self, enc_x, dec_x):
-        enc_mask = self._make_pad_mask(enc_x, enc_x)
-        enc_dec_mask = self._make_pad_mask(dec_x, enc_x)
-        dec_mask =  self._make_pad_mask(dec_x, dec_x) & self._make_subsequent_mask(dec_x, dec_x)
-        
-        enc_x = self.positional_encoding(enc_x.unsqueeze(-1))
-        dec_x = self.positional_encoding(dec_x.unsqueeze(-1))
+        # enc_x, dec_x shape = (batch, seq_len)
+        enc_mask = self._make_pad_mask(enc_x, enc_x)  # (batch, 1, seq_len, seq_len)
+        enc_dec_mask = self._make_pad_mask(dec_x, enc_x)  # (batch, 1, seq_len, seq_len)
+        dec_mask =  self._make_pad_mask(dec_x, dec_x) & self._make_subsequent_mask(dec_x, dec_x)  # (batch, 1, seq_len, seq_len)
+
+        enc_x = self.positional_encoding(enc_x.unsqueeze(-1))  # (batch, seq_len, d_model)
+        dec_x = self.positional_encoding(dec_x.unsqueeze(-1))  # (batch, seq_len, d_model)
 
         enc_output = self.encoder(enc_x, enc_mask)
         dec_output = self.decoder(dec_x, enc_output, dec_mask, enc_dec_mask)
