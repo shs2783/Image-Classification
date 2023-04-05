@@ -54,7 +54,7 @@ class MultiHeadAttention(nn.Module):
             value = x2
         else:
             query = key = value = x
-            
+        
         query = self.query_linear(query)  # (batch, seq_len, dimension)  ## dimension = d_model
         key = self.key_linear(key)        # (batch, seq_len, dimension)
         value = self.value_linear(value)  # (batch, seq_len, dimension)
@@ -105,7 +105,7 @@ class EncoderBlock(nn.Module):
         self.drop_out = nn.Dropout(p=drop_out)
 
     def forward(self, x, enc_mask=None):
-        enc_attention = self.self_attention_layer(x, enc_mask)
+        enc_attention = self.self_attention_layer(x, mask=enc_mask)
         enc_attention = self.layer_norm1(self.drop_out(x + enc_attention))
 
         enc_output = self.fc_layer(enc_attention)
@@ -128,7 +128,7 @@ class DecoderBlock(nn.Module):
         self.drop_out = nn.Dropout(p=drop_out)
 
     def forward(self, x, enc_output, dec_mask=None, enc_dec_mask=None):
-        dec_attention = self.self_attention_layer(x, dec_mask)
+        dec_attention = self.self_attention_layer(x, mask=dec_mask)
         dec_attention = self.layer_norm1(self.drop_out(x + dec_attention))
 
         enc_dec_attention = self.enc_dec_attention_layer(dec_attention, enc_output, enc_dec_mask)
@@ -169,12 +169,16 @@ class Transformer(nn.Module):
         
         self.encoder = Encoder(d_model, num_head, d_ff, num_repeats, drop_out)
         self.decoder = Decoder(d_model, num_head, d_ff, num_repeats, drop_out)
+        self.positional_encoding = nn.Linear(1, d_model)
     
     def forward(self, enc_x, dec_x):
         enc_mask = self._make_pad_mask(enc_x, enc_x)
         enc_dec_mask = self._make_pad_mask(dec_x, enc_x)
         dec_mask =  self._make_pad_mask(dec_x, dec_x) & self._make_subsequent_mask(dec_x, dec_x)
         
+        enc_x = self.positional_encoding(enc_x.unsqueeze(-1))
+        dec_x = self.positional_encoding(dec_x.unsqueeze(-1))
+
         enc_output = self.encoder(enc_x, enc_mask)
         dec_output = self.decoder(dec_x, enc_output, dec_mask, enc_dec_mask)
         return dec_output
@@ -205,6 +209,6 @@ if __name__ == '__main__':
 
     model = Transformer(d_model=512, num_head=8, d_ff=2048, num_repeats=6, drop_out=0.1)
 
-    x = torch.randn(1, 64, 512)  # (batch, seq_len, dimension)
+    x = torch.randn(1, 64)  # (batch, seq_len, dimension)
     y = model(x, x)
     print(y.shape)
