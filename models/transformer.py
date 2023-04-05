@@ -1,5 +1,6 @@
 'https://arxiv.org/pdf/1706.03762.pdf'
 'https://github.com/hyunwoongko/transformer/'
+'https://cpm0722.github.io/pytorch-implementation/transformer'
 
 import torch
 import torch.nn as nn
@@ -170,17 +171,37 @@ class Transformer(nn.Module):
         self.decoder = Decoder(d_model, num_head, d_ff, num_repeats, drop_out)
     
     def forward(self, enc_x, dec_x):
-        enc_mask = None
-        dec_mask = None
-        enc_dec_mask = None
-
+        enc_mask = self._make_pad_mask(enc_x, enc_x)
+        enc_dec_mask = self._make_pad_mask(dec_x, enc_x)
+        dec_mask =  self._make_pad_mask(dec_x, dec_x) & self._make_subsequent_mask(dec_x, dec_x)
+        
         enc_output = self.encoder(enc_x, enc_mask)
         dec_output = self.decoder(dec_x, enc_output, dec_mask, enc_dec_mask)
         return dec_output
 
+    def _make_pad_mask(self, query, key, query_pad_idx=0, key_pad_idx=0):
+        batch, len_q = query.shape
+        batch, len_k = key.shape
+
+        query_mask = (query != query_pad_idx).view(batch, 1, len_q, 1)
+        query_mask = query_mask.repeat(1, 1, 1, len_k)  # (batch, 1, len_q, len_k)
+
+        key_mask = (key != key_pad_idx).view(batch, 1, 1, len_k)
+        key_mask = key_mask.repeat(1, 1, len_q, 1)  # (batch, 1, len_q, len_k)
+
+        pad_mask = query_mask & key_mask
+        return pad_mask
+
+    def _make_subsequent_mask(self, query, key):
+        batch, len_q = query.shape
+        batch, len_k = key.shape
+
+        matrix = torch.ones(len_q, len_k)
+        subsequent_mask = torch.tril(matrix).bool()  # lower triangular matrix
+        return subsequent_mask
+
 if __name__ == '__main__':
     # TODO 1: positional encoding
-    # TODO 2: make mask
 
     model = Transformer(d_model=512, num_head=8, d_ff=2048, num_repeats=6, drop_out=0.1)
 
