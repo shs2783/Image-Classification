@@ -2,25 +2,43 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from transformer import MultiHeadAttention, PositionWiseFeedForward
+from transformer import MultiHeadAttention
     
 
+class PositionWiseFeedForward(nn.Module):
+    def __init__(self, d_model=512, d_ff=2048, drop_out=0.1) -> None:
+        super().__init__()
+
+        self.fc_layer = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Dropout(p=drop_out),
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(p=drop_out)
+        )
+    
+    def forward(self, x):
+        return self.fc_layer(x)
+    
 class EncoderBlock(nn.Module):
     def __init__(self, d_model=512, num_head=8, d_ff=2048, drop_out=0.1) -> None:
         super().__init__()
 
-        self.layer_norm1 = nn.LayerNorm(d_model)
-        self.self_attention_layer = MultiHeadAttention(d_model, num_head)
+        self.self_attention_layer = nn.Sequential(
+            nn.LayerNorm(d_model),
+            MultiHeadAttention(d_model, num_head)
+        )
 
-        self.layer_norm2 = nn.LayerNorm(d_model)
-        self.fc_layer = PositionWiseFeedForward(d_model, d_ff, drop_out)
+        self.fc_layer = nn.Sequential(
+            nn.LayerNorm(d_model),
+            PositionWiseFeedForward(d_model, d_ff, drop_out)
+        )
 
-    def forward(self, x, enc_mask=None):
-        enc_attention = self.self_attention_layer(self.layer_norm1(x), mask=enc_mask)
+    def forward(self, x):
+        enc_attention = self.self_attention_layer(x)
         enc_attention = x + enc_attention
 
-        enc_output = self.fc_layer(self.layer_norm2(enc_attention))
+        enc_output = self.fc_layer(enc_attention)
         enc_output = enc_attention + enc_output
         return enc_output
     
@@ -32,9 +50,9 @@ class Encoder(nn.Module):
         self.layers = [EncoderBlock(d_model, num_head, d_ff, drop_out) for _ in range(num_repeats)]
         self.layers = nn.ModuleList(self.layers)
 
-    def forward(self, x, enc_mask=None):
+    def forward(self, x):
         for layer in self.layers:
-            x = layer(x, enc_mask)
+            x = layer(x)
         return x
     
 class ViT(nn.Module):
