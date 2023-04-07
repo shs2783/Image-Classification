@@ -85,7 +85,8 @@ class PositionWiseFeedForward(nn.Module):
             nn.Linear(d_model, d_ff),
             nn.ReLU(),
             nn.Dropout(p=drop_out),
-            nn.Linear(d_ff, d_model)
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(p=drop_out)
         )
     
     def forward(self, x):
@@ -102,14 +103,12 @@ class EncoderBlock(nn.Module):
         self.fc_layer = PositionWiseFeedForward(d_model, d_ff, drop_out)
         self.layer_norm2 = nn.LayerNorm(d_model)
 
-        self.drop_out = nn.Dropout(p=drop_out)
-
     def forward(self, x, enc_mask=None):
         enc_attention = self.self_attention_layer(x, mask=enc_mask)
-        enc_attention = self.layer_norm1(self.drop_out(x + enc_attention))
+        enc_attention = self.layer_norm1(x + enc_attention)
 
         enc_output = self.fc_layer(enc_attention)
-        enc_output = self.layer_norm2(self.drop_out(enc_attention + enc_output))
+        enc_output = self.layer_norm2(enc_attention + enc_output)
         return enc_output
 
 class DecoderBlock(nn.Module):
@@ -125,17 +124,15 @@ class DecoderBlock(nn.Module):
         self.enc_dec_fc_layer = PositionWiseFeedForward(d_model, d_ff, drop_out)
         self.layer_norm3 = nn.LayerNorm(d_model)
 
-        self.drop_out = nn.Dropout(p=drop_out)
-
     def forward(self, x, enc_output, dec_mask=None, enc_dec_mask=None):
         dec_attention = self.self_attention_layer(x, mask=dec_mask)
-        dec_attention = self.layer_norm1(self.drop_out(x + dec_attention))
+        dec_attention = self.layer_norm1(x + dec_attention)
 
         enc_dec_attention = self.enc_dec_attention_layer(dec_attention, enc_output, enc_dec_mask)
-        enc_dec_attention = self.layer_norm2(self.drop_out(dec_attention + enc_dec_attention))
+        enc_dec_attention = self.layer_norm2(dec_attention + enc_dec_attention)
 
         enc_dec_output = self.enc_dec_fc_layer(enc_dec_attention)
-        enc_dec_output = self.layer_norm3(self.drop_out(enc_dec_attention + enc_dec_output))
+        enc_dec_output = self.layer_norm3(enc_dec_attention + enc_dec_output)
         return enc_dec_output
     
     
@@ -167,9 +164,11 @@ class Transformer(nn.Module):
     def __init__(self, d_model=512, num_head=8, d_ff=2048, num_repeats=6, drop_out=0.1) -> None:
         super().__init__()
         
+        self.token_embedding = nn.Linear(1, d_model)
+        self.positional_encoding = nn.Linear(d_model, d_model)
+
         self.encoder = Encoder(d_model, num_head, d_ff, num_repeats, drop_out)
         self.decoder = Decoder(d_model, num_head, d_ff, num_repeats, drop_out)
-        self.positional_encoding = nn.Linear(1, d_model)
     
     def forward(self, enc_x, dec_x):
         # enc_x, dec_x shape = (batch, seq_len)
@@ -177,8 +176,11 @@ class Transformer(nn.Module):
         enc_dec_mask = self._make_pad_mask(dec_x, enc_x)  # (batch, 1, seq_len, seq_len)
         dec_mask =  self._make_pad_mask(dec_x, dec_x) & self._make_subsequent_mask(dec_x, dec_x)  # (batch, 1, seq_len, seq_len)
 
-        enc_x = self.positional_encoding(enc_x.unsqueeze(-1))  # (batch, seq_len, d_model)
-        dec_x = self.positional_encoding(dec_x.unsqueeze(-1))  # (batch, seq_len, d_model)
+        enc_x = self.token_embedding(enc_x.unsqueeze(-1))  # (batch, seq_len, d_model)
+        dec_x = self.token_embedding(dec_x.unsqueeze(-1))  # (batch, seq_len, d_model)
+
+        enc_x = self.positional_encoding(enc_x)  # (batch, seq_len, d_model)
+        dec_x = self.positional_encoding(dec_x)  # (batch, seq_len, d_model)
 
         enc_output = self.encoder(enc_x, enc_mask)
         dec_output = self.decoder(dec_x, enc_output, dec_mask, enc_dec_mask)
@@ -206,7 +208,8 @@ class Transformer(nn.Module):
         return subsequent_mask
 
 if __name__ == '__main__':
-    # TODO 1: positional encoding
+    # TODO 1: token embedding
+    # TODO 2: positional encoding
 
     model = Transformer(d_model=512, num_head=8, d_ff=2048, num_repeats=6, drop_out=0.1)
 
