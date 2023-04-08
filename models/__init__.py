@@ -10,7 +10,7 @@ from ._1611_05431_resneXt import ResNeXt, resnext_config
 from ._1704_04861_mobilenetV1 import MobileNetV1, mobilenetV1_architecture
 from ._1707_01083_shufflenetV1 import ShuffleNetV1
 from ._1801_04381_mobilenetV2 import MobileNetV2, mobilenetV2_architecture
-from ._1801_04381_mobilenetV2 import MobileNetV2
+from ._1807_11626_mnasnet import MnasNet, mnasnet_architecture
 from ._1905_11946_efficientnet import EfficientNet
 from ._2010_11929_vision_transformer import ViT
 from transformer import Transformer
@@ -28,7 +28,7 @@ __all__ = [
     'MobileNetV1', mobilenetV1_architecture,
     'ShuffleNetV1',
     'MobileNetV2', mobilenetV2_architecture,
-    'MobileNetV2', 
+    'MnasNet', mnasnet_architecture,
     'EfficientNet',
     'Transformer',
     'ViT'

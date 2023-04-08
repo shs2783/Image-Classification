@@ -3,10 +3,10 @@ sys.path.append('models')
 
 import torch
 from utils import show_params
-from models import SqueezeNet
+from models import MnasNet
 
 if __name__=='__main__':
-    model = SqueezeNet()
+    model = MnasNet()
     show_params(model)
 
     x = torch.randn(1, 3, 224, 224)
