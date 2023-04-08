@@ -3,6 +3,7 @@ from ._1200_0000_alexnet import AlexNet
 from ._1409_1556_vggnet import VggNet, vgg_architectures
 from ._1409_4082_googlenet import GoogleNet
 from ._1512_03385_resnet import ResNet, resnet_config
+from ._1602_07360_squeezenet import SqueezeNet
 from ._1608_06993_densenet import DenseNet, densnet_config
 from ._1610_02357_Xceptionnet import XceptionNet
 from ._1611_05431_resneXt import ResNeXt, resnext_config
@@ -20,6 +21,7 @@ __all__ = [
     'VggNet', vgg_architectures,
     'GoogleNet', 
     'ResNet', resnet_config,
+    'SqueezeNet',
     'DenseNet', densnet_config,
     'XceptionNet', 
     'ResNeXt', resnext_config,
