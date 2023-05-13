@@ -1,5 +1,6 @@
 from ._9811_lenet5 import LeNet
 from ._1200_0000_alexnet import AlexNet
+from ._1406_4729_sppnet import SPPNet, spp_config
 from ._1409_1556_vggnet import VggNet, vgg_architectures
 from ._1409_4082_googlenet import GoogleNet
 from ._1512_03385_resnet import ResNet, resnet_config
@@ -17,7 +18,8 @@ from transformer import Transformer
 
 __all__ = [
     'LeNet', 
-    'AlexNet', 
+    'AlexNet',
+    'SPPNet', spp_config,
     'VggNet', vgg_architectures,
     'GoogleNet', 
     'ResNet', resnet_config,
